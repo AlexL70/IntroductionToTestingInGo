@@ -11,10 +11,10 @@ func main() {
 
 func isPrime(n int) (bool, string) {
 	if n == 0 || n == 1 {
-		return false, fmt.Sprintf("%d is not a prime number by definition!", n)
+		return false, fmt.Sprintf("%d is not a prime number, by definition!", n)
 	}
 	if n < 0 {
-		return false, "Negative numbers are not prime by definition!"
+		return false, "Negative numbers are not prime, by definition!"
 	}
 	for i := 2; i < n/2; i++ {
 		if n%i == 0 {
