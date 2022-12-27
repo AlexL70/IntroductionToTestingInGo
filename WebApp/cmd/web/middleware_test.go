@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -49,5 +50,28 @@ func Test_application_addIpToContext(t *testing.T) {
 		}
 
 		handlerToTest.ServeHTTP(httptest.NewRecorder(), req)
+	}
+}
+
+func Test_application_ipFromContext(t *testing.T) {
+	const forwardedKey contextKey = "X-Forwarded-For"
+	tests := []string{
+		"192.3.2.1",
+		"18.3.2.1",
+		"193.3.2.1:3238",
+		"MyIpAddress",
+	}
+
+	for _, e := range tests {
+		var app application
+		var ctx = context.Background()
+		if len(e) > 0 {
+			ctx = context.WithValue(ctx, userIpKey, e)
+		}
+		ip := app.ipFromContext(ctx)
+		if e != ip {
+			t.Errorf("Expected: %q, got %q", e, ip)
+		}
+		t.Log(ip)
 	}
 }
