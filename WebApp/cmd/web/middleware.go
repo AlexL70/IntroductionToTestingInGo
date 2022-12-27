@@ -17,13 +17,13 @@ func (app *application) ipFromContext(ctx context.Context) string {
 
 func (app *application) addIpToContext(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		var ctx = context.Background()
 		//	get the IP address as accurately as possible
 		ip, err := getIp(r)
 		if err != nil && len(ip) == 0 {
 			ip = "unknown"
 		}
-		ctx = context.WithValue(ctx, userIpKey, ip)
+		//	update request context
+		ctx := context.WithValue(r.Context(), userIpKey, ip)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
