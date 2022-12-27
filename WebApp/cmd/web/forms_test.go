@@ -43,3 +43,24 @@ func TestForm_Required(t *testing.T) {
 		t.Error("Form shows invalid when all required fields are present")
 	}
 }
+
+func TestForm_Check(t *testing.T) {
+	form := NewForm(nil)
+	form.Check(false, "password", "password is too short")
+	if form.Valid() {
+		t.Error("Valid() returns true and it should be false after calling Check()")
+	}
+}
+
+func TestForm_ErrorGet(t *testing.T) {
+	form := NewForm(nil)
+	form.Check(false, "password", "password is too short")
+	s := form.Errors.Get("password")
+	if s != "password is too short" {
+		t.Error("Error getting error from the form")
+	}
+	s = form.Errors.Get("whatever")
+	if s != "" {
+		t.Error("False error is returned from the form")
+	}
+}
