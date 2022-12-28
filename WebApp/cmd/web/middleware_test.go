@@ -53,7 +53,6 @@ func Test_application_addIpToContext(t *testing.T) {
 }
 
 func Test_application_ipFromContext(t *testing.T) {
-	const forwardedKey contextKey = "X-Forwarded-For"
 	tests := []string{
 		"192.3.2.1",
 		"18.3.2.1",
