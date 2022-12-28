@@ -40,21 +40,39 @@ func Test_application_handlers(t *testing.T) {
 }
 
 func TestAppHome(t *testing.T) {
-	//	create a request
-	req, _ := http.NewRequest("GET", "/", nil)
-	req = addContextAndSessionToRequest(req, app)
-	//	create a response writer
-	rr := httptest.NewRecorder()
-	//	create a handler
-	handler := http.HandlerFunc(app.Home)
-	handler.ServeHTTP(rr, req)
-	//	check status code
-	if rr.Code != http.StatusOK {
-		t.Errorf("TestAppHome returned wrong status code; expected %d, but got %d", http.StatusOK, rr.Code)
+	var tests = []struct {
+		name         string
+		putInSession string
+		expectedHTML string
+	}{
+		{"first visit", "", "<small>From session:"},
+		{"second visit", "some session info", "<small>From session: some session info"},
 	}
-	body, _ := io.ReadAll(rr.Body)
-	if !strings.Contains(string(body), "<small>From session:") {
-		t.Error("Home page rendering error")
+
+	for _, e := range tests {
+		//	create a request
+		req, _ := http.NewRequest("GET", "/", nil)
+		req = addContextAndSessionToRequest(req, app)
+
+		//	put data to the session
+		_ = app.Session.Destroy(req.Context())
+		if e.putInSession != "" {
+			app.Session.Put(req.Context(), "test", e.putInSession)
+		}
+
+		//	create a response writer
+		rr := httptest.NewRecorder()
+		//	create a handler
+		handler := http.HandlerFunc(app.Home)
+		handler.ServeHTTP(rr, req)
+		//	check status code
+		if rr.Code != http.StatusOK {
+			t.Errorf("TestAppHome returned wrong status code; expected %d, but got %d", http.StatusOK, rr.Code)
+		}
+		body, _ := io.ReadAll(rr.Body)
+		if !strings.Contains(string(body), e.expectedHTML) {
+			t.Errorf("%q: did not find %q in response body", e.name, e.expectedHTML)
+		}
 	}
 }
 
