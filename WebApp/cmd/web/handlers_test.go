@@ -76,6 +76,7 @@ func TestAppHome(t *testing.T) {
 
 func TestApp_renderWithBadTemplate(t *testing.T) {
 	//	set template path to a location with bad template
+	var oldPathToTemplates = pathToTemplates
 	pathToTemplates = "./testdata/"
 
 	req, _ := http.NewRequest("GET", "/", nil)
@@ -86,6 +87,8 @@ func TestApp_renderWithBadTemplate(t *testing.T) {
 	if err == nil {
 		t.Error("Expected error from the bad template, but did not get one")
 	}
+	//	restore proper path to templates
+	pathToTemplates = oldPathToTemplates
 }
 
 func getCtx(r *http.Request) context.Context {
