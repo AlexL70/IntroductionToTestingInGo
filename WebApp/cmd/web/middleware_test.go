@@ -20,7 +20,6 @@ func Test_application_addIpToContext(t *testing.T) {
 		{"", "", "hello:world", false},
 	}
 
-	var app application
 	//	create a dummy handler
 	nextHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		//	make sure that the value exists in the context
@@ -63,7 +62,6 @@ func Test_application_ipFromContext(t *testing.T) {
 	}
 
 	for _, e := range tests {
-		var app application
 		var ctx = context.Background()
 		if len(e) > 0 {
 			ctx = context.WithValue(ctx, userIpKey, e)
