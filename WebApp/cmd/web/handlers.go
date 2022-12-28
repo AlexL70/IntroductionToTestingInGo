@@ -24,6 +24,10 @@ func (app *application) Home(w http.ResponseWriter, r *http.Request) {
 	_ = app.render(w, r, "home.page.gohtml", &TemplateData{Data: td})
 }
 
+func (app *application) Profile(w http.ResponseWriter, r *http.Request) {
+	_ = app.render(w, r, "profile.page.gohtml", &TemplateData{})
+}
+
 type TemplateData struct {
 	IP   string
 	Data map[string]any
@@ -61,7 +65,10 @@ func (app *application) Login(w http.ResponseWriter, r *http.Request) {
 	form.Required("email", "password")
 
 	if !form.Valid() {
-		fmt.Fprint(w, "failed validation")
+		//	redirect to the login page with error messages
+		log.Println(err)
+		app.Session.Put(r.Context(), "error", "Invalid login creds")
+		http.Redirect(w, r, "/", http.StatusSeeOther)
 		return
 	}
 
@@ -71,10 +78,22 @@ func (app *application) Login(w http.ResponseWriter, r *http.Request) {
 	user, err := app.DB.GetUserByEmail(email)
 	if err != nil {
 		log.Println(err)
+		app.Session.Put(r.Context(), "error", "Invalid login!")
+		http.Redirect(w, r, "/", http.StatusSeeOther)
+		return
 	}
-	log.Printf("From databalse: %s %s\n", user.FirstName, user.LastName)
 
-	log.Println(email, password)
+	//	temporary code
+	log.Println(password, user.FirstName)
 
-	fmt.Fprint(w, email)
+	//	authenticate the user
+	//	if user is not authenticated then retirect back with error
+
+	//	ir user is authenticated then prevent fixation attack
+	_ = app.Session.RenewToken(r.Context())
+
+	//	store success message in session
+	//	redirect to some other page
+	app.Session.Put(r.Context(), "flash", "Successfully logged in!")
+	http.Redirect(w, r, "/user/profile", http.StatusSeeOther)
 }
