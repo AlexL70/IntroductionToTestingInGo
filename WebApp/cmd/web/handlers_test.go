@@ -25,8 +25,6 @@ func Test_application_handlers(t *testing.T) {
 	ts := httptest.NewTLSServer(routes)
 	defer ts.Close()
 
-	pathToTemplates = "./../../templates/"
-
 	for _, e := range theTests {
 		resp, err := ts.Client().Get(ts.URL + e.url)
 		if err != nil {
@@ -73,6 +71,20 @@ func TestAppHome(t *testing.T) {
 		if !strings.Contains(string(body), e.expectedHTML) {
 			t.Errorf("%q: did not find %q in response body", e.name, e.expectedHTML)
 		}
+	}
+}
+
+func TestApp_renderWithBadTemplate(t *testing.T) {
+	//	set template path to a location with bad template
+	pathToTemplates = "./testdata/"
+
+	req, _ := http.NewRequest("GET", "/", nil)
+	req = addContextAndSessionToRequest(req, app)
+	rr := httptest.NewRecorder()
+
+	err := app.render(rr, req, "bad.page.gohtml", &TemplateData{})
+	if err == nil {
+		t.Error("Expected error from the bad template, but did not get one")
 	}
 }
 
