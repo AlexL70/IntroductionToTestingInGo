@@ -1,6 +1,8 @@
 package main
 
 import (
+	"database/sql"
+	"flag"
 	"log"
 	"net/http"
 
@@ -9,11 +11,22 @@ import (
 
 type application struct {
 	Session *scs.SessionManager
+	DB      *sql.DB
+	DSN     string
 }
 
 func main() {
 	//	set up an app config
 	app := application{}
+	flag.StringVar(&app.DSN, "dsn",
+		"host=localhost port=5432 user=postgres password=postgres dbname=users sslmode=disable timezone=UTC connect_timeout=5",
+		"Postgress connection string")
+	flag.Parse()
+	conn, err := app.connectToDb()
+	if err != nil {
+		log.Fatal(err)
+	}
+	app.DB = conn
 
 	//	get a session manager
 	app.Session = getSession()
@@ -22,7 +35,7 @@ func main() {
 	log.Println("Starting server on port 8080...")
 
 	//	start the server
-	err := http.ListenAndServe(":8080", app.routes())
+	err = http.ListenAndServe(":8080", app.routes())
 	if err != nil {
 		log.Fatal(err)
 	}
