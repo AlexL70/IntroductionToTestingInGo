@@ -81,25 +81,36 @@ func (app *application) Login(w http.ResponseWriter, r *http.Request) {
 	email := r.Form.Get("email")
 	password := r.Form.Get("password")
 
+	//	authenticate the user
+	//	if user is not authenticated then retirect back with error
 	user, err := app.DB.GetUserByEmail(email)
-	if err != nil {
-		log.Println(err)
+	if err != nil || !app.authenticate(r, user, password) {
+		if err != nil {
+			log.Println(err)
+		}
 		app.Session.Put(r.Context(), "error", "Invalid login!")
 		http.Redirect(w, r, "/", http.StatusSeeOther)
 		return
 	}
 
-	//	temporary code
-	log.Println(password, user.FirstName)
-
-	//	authenticate the user
-	//	if user is not authenticated then retirect back with error
-
 	//	ir user is authenticated then prevent fixation attack
 	_ = app.Session.RenewToken(r.Context())
 
 	//	store success message in session
-	//	redirect to some other page
 	app.Session.Put(r.Context(), "flash", "Successfully logged in!")
+	//	redirect to some other page
 	http.Redirect(w, r, "/user/profile", http.StatusSeeOther)
+}
+
+func (app *application) authenticate(r *http.Request, user *data.User, password string) bool {
+	if valid, err := user.PasswordMatches(password); err != nil || !valid {
+		if err != nil {
+			log.Println(fmt.Errorf("Login error: %e", err))
+		}
+		return false
+	}
+
+	app.Session.Put(r.Context(), "user", user)
+
+	return true
 }
