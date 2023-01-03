@@ -1,1 +1,2 @@
+*.out
 /WebApp/postgres-data/*
