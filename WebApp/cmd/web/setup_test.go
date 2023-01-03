@@ -5,7 +5,7 @@ import (
 	"os"
 	"testing"
 
-	"webapp/pkg/db"
+	"webapp/pkg/repository/dbrepo"
 )
 
 var app application
@@ -20,7 +20,7 @@ func TestMain(m *testing.M) {
 		log.Fatal(err)
 	}
 	defer conn.Close()
-	app.DB = db.PostgresConn{DB: conn}
+	app.DB = &dbrepo.PostgresDbRepo{DB: conn}
 
 	os.Exit(m.Run())
 }
