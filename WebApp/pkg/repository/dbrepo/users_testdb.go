@@ -2,6 +2,8 @@ package dbrepo
 
 import (
 	"database/sql"
+	"fmt"
+	"time"
 	"webapp/pkg/data"
 )
 
@@ -22,8 +24,20 @@ func (m *TestDbRepo) GetUser(id int) (*data.User, error) {
 }
 
 func (m *TestDbRepo) GetUserByEmail(email string) (*data.User, error) {
-	var user data.User
-	return &user, nil
+	if email == "admin@example.com" {
+		return &data.User{
+			ID:        1,
+			FirstName: "Admin",
+			LastName:  "User",
+			Email:     "admin@example.com",
+			Password:  "$2a$14$ajq8Q7fbtFRQvXpdCq7Jcuy.Rx1h/L4J60Otx.gyNLbAYctGMJ9tK",
+			IsAdmin:   1,
+			CreatedAt: time.Now(),
+			UpdatedAt: time.Now(),
+		}, nil
+	} else {
+		return nil, fmt.Errorf("user with email %q not found", email)
+	}
 }
 
 func (m *TestDbRepo) UpdateUser(u data.User) error {
