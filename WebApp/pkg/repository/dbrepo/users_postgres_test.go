@@ -136,3 +136,34 @@ func TestPostgresDBRepoInsertUser(t *testing.T) {
 		t.Errorf("InsertUser returned bad id; expected 1, but got %d", id)
 	}
 }
+
+func TestPostgresDBRepoAllUsers(t *testing.T) {
+	users, err := testRepo.AllUsers()
+	if err != nil {
+		t.Errorf("AllUsers returned an error: %s", err)
+	}
+	if len(users) != 1 {
+		t.Errorf("AllUsers returned list of wrong length; expected 1, but got %d", len(users))
+	}
+
+	testUser := data.User{
+		FirstName: "John",
+		LastName:  "Smith",
+		Email:     "John.Smith@example.com",
+		Password:  "jspwd",
+		IsAdmin:   1,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+	}
+
+	_, _ = testRepo.InsertUser(testUser)
+
+	users, err = testRepo.AllUsers()
+	if err != nil {
+		t.Errorf("AllUsers returned an error: %s", err)
+	}
+	if len(users) != 2 {
+		t.Errorf("AllUsers returned list of wrong length after second insert; expected 2, but got %d", len(users))
+	}
+
+}
