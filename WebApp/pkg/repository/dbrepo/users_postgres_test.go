@@ -74,11 +74,40 @@ func TestMain(m *testing.M) {
 	}
 
 	//	populate the database with empty tables
+	err = createTables()
+	if err != nil {
+		log.Fatalf("Error creating tables: %s", err)
+	}
 
 	//	run tests
 	code := m.Run()
 
 	//	clean up
+	if err := pool.Purge(resource); err != nil {
+		log.Fatalf("Could not purge resource: %s", err)
+	}
 
 	os.Exit(code)
+}
+
+func createTables() error {
+	tableSQL, err := os.ReadFile("./testdata/users.sql")
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+
+	_, err = testDB.Exec(string(tableSQL))
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+	return nil
+}
+
+func Test_pingDB(t *testing.T) {
+	err := testDB.Ping()
+	if err != nil {
+		t.Errorf("Error pinging DB: %s", err)
+	}
 }
