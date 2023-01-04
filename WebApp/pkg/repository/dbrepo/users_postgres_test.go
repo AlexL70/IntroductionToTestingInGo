@@ -167,3 +167,26 @@ func TestPostgresDBRepoAllUsers(t *testing.T) {
 	}
 
 }
+
+func TestPostgresDBRepoGetUser(t *testing.T) {
+	user, err := testRepo.GetUser(1)
+	if err != nil {
+		t.Errorf("GetUser returned an error: %q", err)
+	} else if user.Email != "admin@example.com" {
+		t.Errorf("GetUser returned user with wrong email; expected \"admin@example.com\", but got %q", user.Email)
+	}
+
+	_, err = testRepo.GetUser(5)
+	if err == nil {
+		t.Errorf("No error reported by GetUser when trying to get non-existent user by id")
+	}
+}
+
+func TestPostgresDBRepoGetUserByEmail(t *testing.T) {
+	user, err := testRepo.GetUserByEmail("John.Smith@example.com")
+	if err != nil {
+		t.Errorf("GetUserByEmail returned an error: %q", err)
+	} else if user.ID != 2 {
+		t.Errorf("GetUserByEmail returned user with wrong id; expected 2, but got %d", user.ID)
+	}
+}
