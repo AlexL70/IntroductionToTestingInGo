@@ -206,3 +206,15 @@ func TestPostgresDBRepoUpdateUser(t *testing.T) {
 		t.Errorf("User 2 has not acually been updated. Expected FirstName %q, but got %q. Expected email %q, but got %q.", "Jane", user.FirstName, "Jane.Smith@example.com", user.Email)
 	}
 }
+
+func TestPostgresDBRepoDeleteUser(t *testing.T) {
+	err := testRepo.DeleteUser(2)
+	if err != nil {
+		t.Errorf("DeleteUser returned an error: %q", err)
+		return
+	}
+	_, err = testRepo.GetUser(2)
+	if err == nil {
+		t.Error("Error testing DeleteUser. User ID = 2 was not deleted")
+	}
+}
