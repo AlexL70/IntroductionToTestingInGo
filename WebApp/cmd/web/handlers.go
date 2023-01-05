@@ -120,16 +120,38 @@ func (app *application) authenticate(r *http.Request, user *data.User, password 
 
 func (app *application) UploadProfilePic(w http.ResponseWriter, r *http.Request) {
 	//	call a function that extracts file from an upload (request)
+	files, err := app.UploadFiles(r, "./static/img")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
 
 	//	get the user from the session
+	user := app.Session.Get(r.Context(), "user").(data.User)
 
 	//	create a var of type data.UserImage
+	img := data.UserImage{
+		UserID:   user.ID,
+		FileName: files[0].OriginalFileName,
+	}
 
 	//	insert the user image record into user_images table
+	_, err = app.DB.InsertUserImage(img)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
 
 	//	refresh the sessional variable "user"
+	updatedUser, err := app.DB.GetUser(user.ID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	app.Session.Put(r.Context(), "user", updatedUser)
 
 	//	redirect back to profile page
+	http.Redirect(w, r, "/user/profile", http.StatusSeeOther)
 }
 
 type UploadedFile struct {
@@ -171,7 +193,7 @@ func (app *application) UploadFiles(r *http.Request, uploadDir string) ([]*Uploa
 				return uploudedFiles, nil
 			}(uploadedFiles)
 			if err != nil {
-				return uploadedFiles, err
+				return uploadedFiles, fmt.Errorf("error uploading files: %w", err)
 			}
 		}
 	}
