@@ -3,11 +3,19 @@ package main
 import (
 	"context"
 	"crypto/tls"
+	"fmt"
+	"image"
+	"image/png"
 	"io"
+	"log"
+	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"os"
+	"path"
 	"strings"
+	"sync"
 	"testing"
 )
 
@@ -190,5 +198,73 @@ func Test_application_Login(t *testing.T) {
 		} else {
 			t.Errorf("%s: no location header set", e.name)
 		}
+	}
+}
+
+func Test_application_UploadFiles(t *testing.T) {
+	//	set up pipes
+	pr, pw := io.Pipe()
+
+	//	create new writer, of type *io.Writer
+	writer := multipart.NewWriter(pw)
+
+	//	create a waitgroup, and add 1 to it
+	wg := &sync.WaitGroup{}
+	wg.Add(1)
+
+	//	simulate uploaoding a file using a goroutine and our writer
+	go simulatePngUpload("./testdata/img.png", writer, t, wg)
+
+	//	read from the pipe that receives data
+	request := httptest.NewRequest("POST", "/", pr)
+	request.Header.Add("Content-Type", writer.FormDataContentType())
+
+	//	call app.UploadFiles
+	uploadedFiles, err := app.UploadFiles(request, "./testdata/uploads/")
+	if err != nil {
+		t.Error(err)
+	}
+
+	//	perform our tests
+	destFilePath := fmt.Sprintf("./testdata/uploads/%s", uploadedFiles[0].OriginalFileName)
+	if _, err := os.Stat(destFilePath); os.IsNotExist(err) {
+		t.Error(fmt.Errorf("File \"img.png\" was not saved in \"./testdata/uploads\" directory. Error: %w", err))
+	}
+
+	//	clean up
+	wg.Wait()
+	err = os.Remove(destFilePath)
+	if err != nil {
+		log.Println(fmt.Errorf("Cleanup error: %w", err))
+	}
+}
+
+func simulatePngUpload(fileToUpload string, w *multipart.Writer, t *testing.T, wg *sync.WaitGroup) {
+	defer wg.Done()
+	defer w.Close()
+
+	//	create the form data filed 'file' with value being filename
+	part, err := w.CreateFormFile("file", path.Base(fileToUpload))
+	if err != nil {
+		t.Error(err)
+	}
+
+	//	open actual file
+	f, err := os.Open(fileToUpload)
+	if err != nil {
+		t.Error(err)
+	}
+	defer f.Close()
+
+	//	decode the image
+	img, _, err := image.Decode(f)
+	if err != nil {
+		t.Error(fmt.Errorf("Error decoding image: %w", err))
+	}
+
+	//	write the image to io.Writer
+	err = png.Encode(part, img)
+	if err != nil {
+		t.Error(fmt.Errorf("Error writing image to the part: %w", err))
 	}
 }
