@@ -51,6 +51,9 @@ func (app *application) render(w http.ResponseWriter, r *http.Request, tmpl stri
 	td.IP = app.ipFromContext(r.Context())
 	td.Error = app.Session.PopString(r.Context(), "error")
 	td.Flash = app.Session.PopString(r.Context(), "flash")
+	if app.Session.Exists(r.Context(), "user") {
+		td.User = app.Session.Get(r.Context(), "user").(data.User)
+	}
 
 	//	execute template
 	err = parsedTemplate.Execute(w, td)
@@ -150,6 +153,7 @@ func (app *application) UploadProfilePic(w http.ResponseWriter, r *http.Request)
 	}
 	app.Session.Put(r.Context(), "user", updatedUser)
 
+	log.Println(updatedUser)
 	//	redirect back to profile page
 	http.Redirect(w, r, "/user/profile", http.StatusSeeOther)
 }
@@ -169,7 +173,7 @@ func (app *application) UploadFiles(r *http.Request, uploadDir string) ([]*Uploa
 
 	for _, fHeaders := range r.MultipartForm.File {
 		for _, hdr := range fHeaders {
-			uploadedFiles, err = func(uploudedFiles []*UploadedFile) ([]*UploadedFile, error) {
+			uploadedFiles, err = func(uploadedFiles []*UploadedFile) ([]*UploadedFile, error) {
 				var uploadedFile UploadedFile
 				infile, err := hdr.Open()
 				if err != nil {
@@ -188,9 +192,9 @@ func (app *application) UploadFiles(r *http.Request, uploadDir string) ([]*Uploa
 					return nil, err
 				}
 				uploadedFile.FileSize = fileSize
-				uploudedFiles = append(uploudedFiles, &uploadedFile)
+				uploadedFiles = append(uploadedFiles, &uploadedFile)
 
-				return uploudedFiles, nil
+				return uploadedFiles, nil
 			}(uploadedFiles)
 			if err != nil {
 				return uploadedFiles, fmt.Errorf("error uploading files: %w", err)

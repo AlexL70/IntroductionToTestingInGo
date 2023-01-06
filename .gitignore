@@ -1,3 +1,5 @@
 *.exe
 *.out
 /WebApp/postgres-data/*
+/WebApp/static/*
+.vscode
