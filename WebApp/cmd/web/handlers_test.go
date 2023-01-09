@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"crypto/tls"
 	"fmt"
@@ -17,6 +18,7 @@ import (
 	"strings"
 	"sync"
 	"testing"
+	"webapp/pkg/data"
 )
 
 func Test_application_handlers(t *testing.T) {
@@ -237,6 +239,8 @@ func Test_application_UploadFiles(t *testing.T) {
 	if err != nil {
 		log.Println(fmt.Errorf("Cleanup error: %w", err))
 	}
+
+	wg.Wait()
 }
 
 func simulatePngUpload(fileToUpload string, w *multipart.Writer, t *testing.T, wg *sync.WaitGroup) {
@@ -267,4 +271,48 @@ func simulatePngUpload(fileToUpload string, w *multipart.Writer, t *testing.T, w
 	if err != nil {
 		t.Error(fmt.Errorf("Error writing image to the part: %w", err))
 	}
+}
+
+func Test_application_UploadProfilePic(t *testing.T) {
+	uploadPath = "./testdata/uploads"
+	filePath := "./testdata/img.png"
+
+	//	specify a field name for a form
+	fieldName := "file"
+
+	//	create buffer to act as request's body
+	body := new(bytes.Buffer)
+
+	//	crete a new writer
+	mw := multipart.NewWriter(body)
+
+	file, err := os.Open(filePath)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	w, err := mw.CreateFormFile(fieldName, filePath)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err = io.Copy(w, file); err != nil {
+		t.Fatal(err)
+	}
+	mw.Close()
+
+	req := httptest.NewRequest(http.MethodPost, "/upload", body)
+	req = addContextAndSessionToRequest(req, app)
+	app.Session.Put(req.Context(), "user", data.User{ID: 1})
+	req.Header.Add("Content-Type", mw.FormDataContentType())
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(app.UploadProfilePic)
+	handler.ServeHTTP(rr, req)
+
+	if rr.Code != http.StatusSeeOther {
+		t.Errorf("Bad status code returned; expected %d, but got %d", http.StatusSeeOther, rr.Code)
+	}
+
+	//	cleanup
+	_ = os.Remove(fmt.Sprintf("%s/img.png", uploadPath))
 }
