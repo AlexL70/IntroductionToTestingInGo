@@ -19,7 +19,7 @@ func Test_app_routes(t *testing.T) {
 		{"/users/{userID}", "GET"},
 		{"/users/{userID}", "DELETE"},
 		{"/users/", "PUT"},
-		{"/users/{userID}", "PATCH"},
+		{"/users/", "PATCH"},
 	}
 
 	mux := app.routes()

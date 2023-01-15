@@ -51,7 +51,10 @@ func (m *TestDbRepo) GetUserByEmail(email string) (*data.User, error) {
 }
 
 func (m *TestDbRepo) UpdateUser(u data.User) error {
-	return nil
+	if u.ID == 1 {
+		return nil
+	}
+	return errors.New("error updating user")
 }
 
 func (m *TestDbRepo) DeleteUser(id int) error {
