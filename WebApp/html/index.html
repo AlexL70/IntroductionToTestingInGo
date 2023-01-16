@@ -67,13 +67,13 @@
 
     //  get references to UI elements
     let loginForm = document.getElementById("login-form");
-    let loginBtn = document.getElementById("login")
+    let loginBtn = document.getElementById("login");
     let userBtn = document.getElementById("getUserBtn");
     let userOutput = document.getElementById("user-output");
     let tokensDiv = document.getElementById("tokens");
-    let tokensDisplay = document.getElementById("token");
+    let tokenDisplay = document.getElementById("token");
     let refreshTokenDisplay = document.getElementById("refresh");
-    let logoutBtn = document.getElementById("logout")
+    let logoutBtn = document.getElementById("logout");
 
     document.addEventListener("DOMContentLoaded", function() {
         //  call refreshTokens; this will log the user in if he/she has valid
@@ -81,10 +81,10 @@
         refreshTokens();
     });
     
-    loginBtn.addEventListener("click", function(){
+    loginBtn.addEventListener("click", function() {
         const payload = {
             email: document.getElementById("email").value,
-            password: document.getElementById("password").value
+            password: document.getElementById("password").value,
         }
 
         const requestOptions = {
@@ -97,7 +97,7 @@
         };
 
         fetch(`/web/auth`, requestOptions)
-            .then((restponse) => restponse.json())
+            .then((response) => response.json())
             .then((data) => {
                 if (data.access_token) {
                     access_token = data.access_token;
@@ -105,7 +105,7 @@
                     setUI(true);
                 }
             })
-            .catch(error => {alert(error)});
+            .catch(error => {alert(error);});
     });
 
     function refreshTokens() {
@@ -137,16 +137,16 @@
             tokensDiv.classList.remove("d-none");
             loginForm.classList.add("d-none");
             logoutBtn.classList.remove("d-none");
-            tokensDisplay.innerHTML = access_token
-            refreshTokenDisplay.innerHTML = refresh_token
+            tokenDisplay.innerHTML = access_token;
+            refreshTokenDisplay.innerHTML = refresh_token;
         } else {
-           tokensDiv.classList.add("d-none");
-           loginForm.classList.remove("d-nont");
-           logoutBtn.classList.add("d-nont");
-           document.getElementById("password").value = "";
-           tokensDisplay.innerHTML = "No token!";
-           refreshTokenDisplay.innerHTML = "No refresh token!";
-           userOutput.innerHTML = "Nothing from server yet...";
+            tokensDiv.classList.add("d-none");
+            loginForm.classList.remove("d-none");
+            logoutBtn.classList.add("d-none");
+            document.getElementById("password").value = "";
+            tokenDisplay.innerHTML = "No token!";
+            refreshTokenDisplay.innerHTML = "No refresh token!";
+            userOutput.innerHTML = "Nothing from server yet...";
         }
     }
 </script>

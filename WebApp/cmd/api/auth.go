@@ -97,6 +97,9 @@ func (app *application) generateTokenPair(user *data.User) (TokenPairs, error) {
 	refreshTokenClaims["exp"] = time.Now().Add(refreshTokenExpiry).Unix()
 	//	create signed refresh token
 	signedRefreshToken, err := refreshToken.SignedString([]byte(app.JWTSecret))
+	if err != nil {
+		return TokenPairs{}, err
+	}
 	var tokenPairs = TokenPairs{
 		Token:        signedAccessToken,
 		RefreshToken: signedRefreshToken,
