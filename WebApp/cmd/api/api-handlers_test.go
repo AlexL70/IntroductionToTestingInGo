@@ -171,7 +171,7 @@ func Test_app_refreshUsingCookie(t *testing.T) {
 
 	tokens, _ := app.generateTokenPair(&testUser)
 
-	testCookie := http.Cookie{
+	testCookie := &http.Cookie{
 		Name:     "__Host-refresh_token",
 		Path:     "/",
 		Value:    tokens.RefreshToken,
@@ -183,7 +183,7 @@ func Test_app_refreshUsingCookie(t *testing.T) {
 		Secure:   true,
 	}
 
-	badCookie := http.Cookie{
+	badCookie := &http.Cookie{
 		Name:     "__Host-refresh_token",
 		Path:     "/",
 		Value:    "some bad token",
@@ -198,23 +198,49 @@ func Test_app_refreshUsingCookie(t *testing.T) {
 	var tests = []struct {
 		name           string
 		addCookie      bool
-		cookie         http.Cookie
+		cookie         *http.Cookie
 		expectedStatus int
 	}{
 		{"valid cookie", true, testCookie, http.StatusOK},
 		{"invalid cookie", true, badCookie, http.StatusBadRequest},
+		{"no cookie", false, testCookie, http.StatusUnauthorized},
 	}
 
 	for _, e := range tests {
 		rr := httptest.NewRecorder()
 		req, _ := http.NewRequest("GET", "/", nil)
 		if e.addCookie {
-			req.AddCookie(&e.cookie)
+			req.AddCookie(e.cookie)
 		}
 		handler := http.HandlerFunc(app.refreshUsingCookie)
 		handler.ServeHTTP(rr, req)
 		if e.expectedStatus != rr.Code {
 			t.Errorf("%s: wrong status code returned; expected %d, but got %d", e.name, e.expectedStatus, rr.Code)
 		}
+	}
+}
+
+func Test_app_deleteRefreshCookie(t *testing.T) {
+	req, _ := http.NewRequest("GET", "/logoun", nil)
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(app.deleteRefreshCookie)
+	handler.ServeHTTP(rr, req)
+
+	if rr.Code != http.StatusAccepted {
+		t.Errorf("wrong status; expected %d, but god %d", http.StatusAccepted, rr.Code)
+	}
+
+	foundCookie := false
+	for _, c := range rr.Result().Cookies() {
+		if c.Name == "__Host-refresh_token" {
+			foundCookie = true
+			if c.Expires.After(time.Now()) {
+				t.Errorf("cookie expiration date in future, and should not be: %v", c.Expires.UTC())
+			}
+			break
+		}
+	}
+	if !foundCookie {
+		t.Error("__Host-refresh_token cookie not found!")
 	}
 }
