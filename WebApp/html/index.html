@@ -67,15 +67,21 @@
 
     //  get references to UI elements
     let loginForm = document.getElementById("login-form");
-    let logingBtn = document.getElementById("login")
+    let loginBtn = document.getElementById("login")
     let userBtn = document.getElementById("getUserBtn");
     let userOutput = document.getElementById("user-output");
     let tokensDiv = document.getElementById("tokens");
     let tokensDisplay = document.getElementById("token");
     let refreshTokenDisplay = document.getElementById("refresh");
     let logoutBtn = document.getElementById("logout")
+
+    document.addEventListener("DOMContentLoaded", function() {
+        //  call refreshTokens; this will log the user in if he/she has valid
+        //  non-expired __Host-refresh_token cookie
+        refreshTokens();
+    });
     
-    login.addEventListener("click", function(){
+    loginBtn.addEventListener("click", function(){
         const payload = {
             email: document.getElementById("email").value,
             password: document.getElementById("password").value
@@ -101,6 +107,30 @@
             })
             .catch(error => {alert(error)});
     });
+
+    function refreshTokens() {
+        //  we'll send a get request which includes __Host-refresh_token cookie if it exists
+        const requestOptions = {
+            method: "GET",
+            credentials: "include",
+        };
+
+        fetch(`/web/refresh-token`, requestOptions)
+            .then((response) => response.json())
+            .then((data) => {
+                if (data.access_token) {
+                    access_token = data.access_token;
+                    refresh_token = data.refresh_token;
+                    setUI(true);
+                } else {
+                    setUI(false);
+                }
+            })
+            .catch(error => {
+                console.log("user is not logged in");
+                console.log(error);
+            });
+    }
 
     function setUI(loggedIn) {
         if (loggedIn) {
