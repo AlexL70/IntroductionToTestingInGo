@@ -190,6 +190,19 @@
             userOutput.innerHTML = "Nothing from server yet...";
         }
     }
+
+    logoutBtn.addEventListener("click", function(){
+        access_token = "";
+        refresh_token = "";
+
+        fetch("/web/logout", { method: "GET"})
+            .then((restonse) => {
+                setUI(false);
+            })
+            .catch((error) => {
+                userOutput.innerHTML = "ERROR!!!";
+            });
+    })
 </script>
 
 </body>
